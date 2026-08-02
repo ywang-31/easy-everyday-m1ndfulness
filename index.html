@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自我觉察和正念</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --bg: #EEE7DB; --card: #FFFFFF; --card-alt: #F7F3EA;
+    --ink: #211C16; --ink-muted: #8A8171;
+    --blue: #4D6497; --blue-dim: #E1E4EA;
+    --accent2: #314672; --accent2-dim: #E1E4EA;
+    --gold: #DAC481; --gold-dim: #F2EAD3;
+    --terracotta: #BD7351;
+    --border: #E0D6C2;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0; min-height:100vh; background: var(--bg); color: var(--ink);
+    font-family:'Inter','Noto Sans SC', system-ui, -apple-system, sans-serif;
+    display:flex; align-items:flex-start; justify-content:center; padding: 28px 16px 100px;
+  }
+  #app{ width:100%; max-width: 480px; }
+
+  .eyebrow{ font-family:'Inter','Noto Sans SC', sans-serif; font-weight:800; font-size:12px; letter-spacing:0.12em;
+    color: var(--ink-muted); text-align:center; margin-bottom: 6px; text-transform:uppercase; }
+  .home-title{ font-family:'Poppins','Noto Sans SC',sans-serif; font-weight:600; font-size:27px;
+    text-align:center; margin: 2px 0 6px; }
+  .home-sub{ text-align:center; color:var(--ink-muted); font-size:13.5px; margin-bottom:22px; }
+
+  .header-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 4px; }
+  .icon-btn{ background:var(--card); border:1px solid var(--border); color:var(--ink-muted);
+    border-radius:10px; padding:8px 12px; font-size:12.5px; cursor:pointer; font-family:'Inter','Noto Sans SC',sans-serif; font-weight:600; }
+  .icon-btn:hover{ color:var(--ink); border-color:var(--blue); }
+
+  .tier-block{ margin-top: 22px; }
+  .tier-head{ display:flex; align-items:baseline; gap:8px; margin-bottom:10px; padding: 0 2px; }
+  .tier-name{ font-family:'Poppins','Noto Sans SC',sans-serif; font-weight:600; font-size:16.5px; color:var(--blue); }
+  .tier-desc{ font-size:12px; color:var(--ink-muted); }
+
+  .topic-grid{ display:flex; flex-direction:column; gap:10px; }
+  .topic-card{ background: var(--card); border:1px solid var(--border); border-radius:16px;
+    padding: 15px 17px; cursor:pointer; transition: all .18s ease; display:flex; align-items:center; gap:13px; }
+  .topic-card:hover{ border-color: var(--blue); background: var(--card-alt); }
+  .topic-emoji{ font-size:24px; width:32px; text-align:center; flex-shrink:0; }
+  .topic-body{ flex:1; }
+  .topic-name{ font-family:'Inter','Noto Sans SC', sans-serif; font-weight:700; font-size:15px; margin-bottom:2px; }
+  .topic-blurb{ font-size:12px; color:var(--ink-muted); line-height:1.4; }
+  .topic-check{ font-size:11.5px; color: var(--accent2); font-weight:700; flex-shrink:0; white-space:nowrap; }
+
+  .fab{ position:fixed; bottom:22px; right:22px; background: var(--blue); color:#fff;
+    border:none; border-radius:999px; padding:13px 18px; font-family:'Inter','Noto Sans SC',sans-serif;
+    font-weight:700; font-size:13.5px; box-shadow:0 10px 24px -8px rgba(109,116,184,.6);
+    cursor:pointer; z-index:50; }
+  .fab:hover{ filter:brightness(1.06); }
+
+  .backline{ display:flex; align-items:center; gap:6px; margin-bottom:14px; }
+  .backbtn{ background:none; border:none; color:var(--ink-muted); font-size:13.5px; cursor:pointer;
+    font-family:'Inter','Noto Sans SC',sans-serif; font-weight:600; padding:6px 0; }
+  .backbtn:hover{ color: var(--ink); }
+
+  .dots{ display:flex; justify-content:center; gap:7px; margin-bottom:18px; }
+  .dot{ width:7px; height:7px; border-radius:50%; background: var(--border); transition:all .3s ease; }
+  .dot.done{ background: var(--gold); }
+  .dot.current{ background: var(--blue); width:20px; border-radius:4px; }
+
+  .card{ background: var(--card); border:1px solid var(--border); border-radius:20px;
+    padding: 28px 24px; box-shadow: 0 16px 40px -20px rgba(33,28,22,.18);
+    min-height: 280px; display:flex; flex-direction:column; animation: rise .3s ease; }
+  @keyframes rise{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .theme-tag{ display:inline-block; font-size:11.5px; color:#fff; font-weight:700;
+    background: var(--blue); padding:4px 11px; border-radius:999px; margin-bottom:12px; align-self:flex-start; }
+  h1.title{ font-family:'Poppins','Noto Sans SC',sans-serif; font-weight:600; font-size:21px;
+    margin:0 0 10px; line-height:1.35; }
+  .practice-note{ background: var(--card-alt); border-left:3px solid var(--gold);
+    padding: 10px 12px; border-radius:8px; font-size:12.5px; color:#5c5546;
+    margin-bottom:18px; line-height:1.55; }
+  .purpose-note{ background: var(--blue-dim); border-radius:12px; padding:14px 16px;
+    font-size:13.5px; color:#3d4270; line-height:1.6; margin-bottom:20px; }
+
+  label.q{ font-size:13.5px; color: var(--ink); margin-bottom:7px; display:block; line-height:1.5; font-weight:500; }
+  textarea, input[type=email], input[type=text]{
+    width:100%; background: var(--card-alt); border:1px solid var(--border); border-radius:12px;
+    color:var(--ink); font-family:'Inter','Noto Sans SC',sans-serif; font-size:14px; padding:12px 13px;
+    resize:none; outline:none; margin-bottom:16px; }
+  textarea{ min-height:64px; }
+  textarea:focus, input:focus{ border-color: var(--blue); }
+  .field-wrap{ margin-bottom: 4px; }
+  .count-hint{ font-size:11.5px; color:var(--ink-muted); margin:-12px 0 16px; }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:9px; margin-bottom:16px; }
+  .chip{ padding:10px 15px; background: var(--card-alt); border:1px solid var(--border);
+    border-radius:999px; font-size:13.5px; color:var(--ink); cursor:pointer; user-select:none;
+    transition: all .16s ease; min-height:40px; display:flex; align-items:center; }
+  .chip:hover{ background: var(--blue-dim); }
+  .chip.selected{ background: var(--blue); border-color: var(--blue); color:#fff; font-weight:700; }
+
+  .scale-row{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .scale-num{ width:32px; height:32px; border-radius:8px; background:var(--card-alt);
+    border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; cursor:pointer; color:var(--ink-muted); }
+  .scale-num.selected{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
+
+  .spacer{ flex:1; }
+  .nav{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+  .btn{ border:none; border-radius:12px; padding:12px 18px; font-family:'Inter','Noto Sans SC',sans-serif;
+    font-size:14px; font-weight:700; cursor:pointer; transition:all .18s ease; min-height:44px; }
+  .btn-primary{ background: var(--blue); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-gold{ background: var(--terracotta); color:#F4F0E6; }
+  .btn-gold:hover{ filter:brightness(1.06); }
+  .btn-ghost{ background:transparent; color:var(--ink-muted); }
+  .btn-ghost:hover{ color:var(--ink); }
+
+  .done-emoji{ font-size:34px; text-align:center; margin-bottom:8px; }
+  .affirm{ font-family:'Poppins','Noto Sans SC',sans-serif; font-size:18px; text-align:center;
+    line-height:1.5; margin:4px 0 20px; }
+  .center-note{ text-align:center; color:var(--ink-muted); font-size:13px; line-height:1.6; margin: 14px 0; }
+
+  .streak-big{ text-align:center; margin: 6px 0 20px; }
+  .streak-num{ font-family:'Poppins','Noto Sans SC',sans-serif; font-size:46px; font-weight:600; color:var(--terracotta); line-height:1; }
+  .streak-label{ font-size:12.5px; color:var(--ink-muted); margin-top:4px; }
+
+  .cal-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-bottom:20px; }
+  .cal-cell{ aspect-ratio:1; border-radius:6px; background: var(--card-alt); border:1px solid var(--border); }
+  .cal-cell.filled{ background: var(--gold-dim); border-color: var(--gold); }
+
+  .theme-stat-row{ display:flex; align-items:center; justify-content:space-between;
+    padding: 9px 0; border-bottom: 1px solid var(--border); font-size:13px; }
+  .theme-stat-row:last-child{ border-bottom:none; }
+  .theme-stat-count{ color: var(--blue); font-weight:700; }
+
+  .toolbox-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+  .toolbox-tab{ flex:1; text-align:center; padding:9px 6px; border-radius:10px; font-size:12.5px;
+    font-weight:700; background:var(--card-alt); border:1px solid var(--border); cursor:pointer; color:var(--ink-muted); }
+  .toolbox-tab.active{ background:var(--blue); color:#fff; border-color:var(--blue); }
+
+  .breathe-wrap{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 14px 0; }
+  .breathe-circle{ width: 130px; height:130px; border-radius:50%;
+    background: radial-gradient(circle, var(--blue-dim), transparent 70%);
+    border: 2px solid var(--blue); display:flex; align-items:center; justify-content:center;
+    transition: transform 4s ease-in-out; transform: scale(0.7); }
+  .breathe-circle.grow{ transform: scale(1.18); }
+  .breathe-label{ font-family:'Poppins','Noto Sans SC',sans-serif; font-size:16px; color:var(--blue); margin-top:18px; }
+
+  .ground-item{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .ground-num{ width:26px; height:26px; border-radius:50%; background:var(--gold); color:var(--ink);
+    font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  ::selection{ background: var(--gold); color:var(--ink); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============ 把这两行换成你自己 Supabase 项目的信息 ============ */
+var SUPABASE_URL = 'https://gyqyrkislnplqzlrncnq.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_g4GiD0lfzoAID0J7rU8GZQ_kpTHzDMo';
+/* =================================================================== */
+
+var supabase = (SUPABASE_URL.indexOf('YOUR_') === 0)
+  ? null
+  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+(function(){
+
+  /* ============================= 内容数据 ============================= */
+
+  var EMOTION_WORDS = ['烦躁','委屈','无力','羞愧','警觉','疲惫','愧疚','失落','平静','其他'];
+
+  var TOPICS = {
+    awareness: {
+      id:'awareness', tier:'aware', emoji:'👁️', name:'自我察觉', blurb:'看清情绪和身体到底在说什么',
+      purpose:'情绪来得太快太模糊，来不及命名拆解，容易被"心情不好"这种笼统说法糊弄过去，导致同样的触发一犯再犯却看不出规律。',
+      blocks:[
+        { title:'情绪命名', note:'从词表挑，不用凭空造词', fields:[
+          {type:'chips', q:'此刻最贴近的感受是？', options:EMOTION_WORDS},
+          {type:'text', q:'还有没有别的感受混杂在里面？', ph:''}
+        ]},
+        { title:'触发点', note:'把感受和具体场景绑定，才能看出规律', fields:[
+          {type:'text', q:'今天有没有一个瞬间情绪明显变化？发生了什么？', ph:''},
+          {type:'chips', q:'这属于哪一类触发？', options:['人际','工作','健康','金钱','时间管理','其他']}
+        ]},
+        { title:'身体信号', note:'按头→肩→胸→胃→手的顺序过一遍，不用每次现想', fields:[
+          {type:'chips', q:'哪个部位最先有反应？', options:['头','肩','胸','胃','手','没注意到']},
+          {type:'text', q:'如果能提早注意到这个信号，可以做什么？', ph:''}
+        ]}
+      ]
+    },
+    kindness: {
+      id:'kindness', tier:'response', emoji:'🌿', name:'自我仁慈', blurb:'对自己更温和，但不是纵容',
+      purpose:'内心批评的声音如果不被审视，会被当成事实一直用来攻击自己；但完全不加审视地"对自己好"，又容易变成逃避该做的事的借口。',
+      blocks:[
+        { title:'识别批评者', note:'先如实记录原句，再套用替换公式改写', fields:[
+          {type:'text', q:'今天批评自己的那句话是什么？', ph:''},
+          {type:'text', q:'换成"如果是朋友，我会说"的版本是什么？', ph:'如果我最好的朋友告诉我这件事，我会对TA说……'}
+        ]},
+        { title:'仁慈 vs 纵容', note:'用这个具体问题判断，而不是凭感觉', fields:[
+          {type:'text', q:'今天有没有一件事，用"对自己好"当借口逃避了该做的事？', ph:''},
+          {type:'chips', q:'长期这样做，情况会变好还是变糟？', options:['会变好','会变糟','不确定']}
+        ]},
+        { title:'期待校准', note:'写出具体差距，而不是笼统说"标准太高"', fields:[
+          {type:'text', q:'我对自己这件事的要求是什么？', ph:''},
+          {type:'text', q:'如果是朋友做到这样，我会怎么说？差在哪？', ph:''}
+        ]}
+      ]
+    },
+    relax: {
+      id:'relax', tier:'recovery', emoji:'🌙', name:'真正的放松', blurb:'分清放松和麻痹/逃避',
+      purpose:'很多"放松"其实是麻痹/逃避，身体没有真正安定下来，长期下来疲惫感消不掉。',
+      blocks:[
+        { title:'前后对比', note:'用数字判断，而不是凭印象', fields:[
+          {type:'text', q:'今天做的哪件事像是在放松？', ph:''},
+          {type:'scale', q:'做之前，身体紧绷感（1轻松-10紧绷）'},
+          {type:'scale', q:'做之后，身体紧绷感（1轻松-10紧绷）'}
+        ]},
+        { title:'逃避识别', note:'没放松时，查一下当时在逃避什么', fields:[
+          {type:'chips', q:'今天有没有真正放松过？', options:['有','没有']},
+          {type:'text', q:'如果没有，当时可能在逃避什么感受？', ph:''}
+        ]},
+        { title:'清单积累', note:'只收录具体到能直接执行的动作', fields:[
+          {type:'text', q:'今天有没有发现一个新的、真的有效的放松动作？', ph:'具体到能直接执行，比如"光脚踩草地"'}
+        ]}
+      ]
+    },
+    challenge: {
+      id:'challenge', tier:'action', emoji:'🧩', name:'挑战剖析', blurb:'把困扰拆开，找到能做的一步',
+      purpose:'遇到困扰容易困在情绪和自己脑补的故事里出不来，这里提供一个结构化流程，把说不清的困扰变成看得见、能行动的东西。',
+      hasFollowup:true,
+      blocks:[
+        { title:'事实与解读', note:'先写事实，再写解读，反问解读的证据', fields:[
+          {type:'text', q:'客观发生了什么？（去掉情绪化的词）', ph:''},
+          {type:'text', q:'我给它加上了什么"故事"或意义？这个解读证据有多充分？', ph:''}
+        ]},
+        { title:'需求识别', note:'长期能看出自己最常见的痛点类型', fields:[
+          {type:'chips', q:'这件事戳到的是？', options:['面子','控制感','安全感','归属感','其他']}
+        ]},
+        { title:'最小行动', note:'这一步会在下次打开时被追问有没有做到', fields:[
+          {type:'text', q:'今天/明天能做的最小一步是什么？', ph:'具体到能立刻执行的动作', trackable:true}
+        ]}
+      ]
+    },
+    regulate: {
+      id:'regulate', tier:'response', emoji:'🌊', name:'情绪控制', blurb:'给情绪一个出口，而不是被它带走',
+      purpose:'情绪不是敌人，没被及时处理的情绪容易变成后知后觉的爆发或压抑。',
+      blocks:[
+        { title:'缓冲工具', note:'需要现场处理时，直接用"现场平静"工具箱，不用重新想办法', fields:[
+          {type:'toolLink'},
+          {type:'text', q:'今天用了现场平静里的哪个工具？有没有效？', ph:''}
+        ]},
+        { title:'表达与需求', note:'把发泄翻译成真正的需求', fields:[
+          {type:'chips', q:'今天说出口的情绪化的话，更像是？', options:['在表达需求','在发泄/攻击','都不算，没说出口']},
+          {type:'text', q:'如果要翻译成"真正想表达的需求"，可以怎么说？', ph:''}
+        ]},
+        { title:'情绪的信息', note:'参考对照，不是标准答案：愤怒→边界被侵犯，焦虑→在意某个结果，内疚→价值观冲突', fields:[
+          {type:'text', q:'今天最强的一次情绪是什么？它在提醒我什么？', ph:''},
+          {type:'chips', q:'打算怎么回应？', options:['现在处理','先记录，之后处理','决定不回应']}
+        ]}
+      ]
+    },
+    impulse: {
+      id:'impulse', tier:'response', emoji:'⚡', name:'冲动控制', blurb:'分辨真实需求还是情绪转移',
+      purpose:'分辨一个冲动是真实需求还是情绪转移，需要延迟时给出真正能用的方法。',
+      blocks:[
+        { title:'冲动分类', note:'先分类，不同类型应对方式不同', fields:[
+          {type:'chips', q:'今天的冲动是哪种类型？', options:['购物','想开始新爱好','想联系某人','想吃点什么','想做一个决定/承诺','其他']}
+        ]},
+        { title:'需求排查', note:'这些状态最容易伪装成"我想要点什么"', fields:[
+          {type:'chips', q:'冲动出现前，我是不是？', options:['饿','累','孤独','有压力','无聊','都不是'], multi:true}
+        ]},
+        { title:'评估矩阵', note:'帮你做决定的框架，不是评判你是否又分心了', fields:[
+          {type:'chips', q:'大概要投入多少？', options:['几分钟','半天以内','长期投入']},
+          {type:'scale', q:'这和我在意的目标/价值观有多大关系？', max:5},
+          {type:'chips', q:'现在做，还是记下来留到以后？', options:['现在做','记下来，以后再看']}
+        ]},
+        { title:'延迟工具箱', note:'不同方法适合不同情况，记录哪个对你有用', fields:[
+          {type:'toolLink'},
+          {type:'chips', q:'今天用了哪个延迟方法？', options:['等24小时','占用双手','具体问题法','没用工具，直接做了','没用工具，忍住了']},
+          {type:'text', q:'这个方法有效吗？', ph:''}
+        ]}
+      ]
+    },
+    basics: {
+      id:'basics', tier:'aware', emoji:'🌾', name:'基本生理需求核查', blurb:'排除最容易被忽略的原因',
+      purpose:'情绪失控、易怒、注意力涣散，很多时候根源不是"心理问题"，而是最基本的生理状态没被满足。检查不是评判你有没有照顾好自己，是排除一个最常被忽略、但影响最大的原因。',
+      blocks:[
+        { title:'睡眠', fields:[
+          {type:'text', q:'昨晚睡了大概几小时？醒来是解乏还是更累？', ph:''},
+          {type:'text', q:'如果连续两天不足6小时，今晚能做的一件事是什么？', ph:''}
+        ]},
+        { title:'饮食', fields:[
+          {type:'chips', q:'今天吃饭规律吗？', options:['规律','错过一顿','忘记/顶替','暴食']},
+          {type:'text', q:'如果错过一顿，现在能补的最简单选择是什么？', ph:''}
+        ]},
+        { title:'身体活动', fields:[
+          {type:'chips', q:'今天身体动了吗？', options:['有正常运动','走了一些路','几乎没动']},
+          {type:'text', q:'如果完全没动，现在能做的最小动作是什么？', ph:''}
+        ]}
+      ]
+    },
+    procrastination: {
+      id:'procrastination', tier:'action', emoji:'🐢', name:'拖延与启动阻力', blurb:'找到具体卡住的环节',
+      purpose:'拖延通常不是意志力问题，而是信息不全或情绪自我保护在起作用。目的不是逼你承认为什么不做，而是找到具体卡住的环节。',
+      isBranching:true
+    },
+    order: {
+      id:'order', tier:'action', emoji:'🗂️', name:'平静有序', blurb:'把乱糟糟的事情理出头绪',
+      purpose:'事情一多容易陷入"脑子里转但没有清单"的焦虑循环，这里练习把负担外部化。',
+      blocks:[
+        { title:'倒空', note:'2分钟倒出来，不整理不分类，一行写一件事', fields:[
+          {type:'countedText', q:'脑子里转的事，都倒出来', ph:'一行写一件事'}
+        ]},
+        { title:'排序', note:'只判断真紧急还是感觉紧急', fields:[
+          {type:'countedText', q:'从上面挑出"今天真正紧急"的几条', ph:'一行写一条'}
+        ]}
+      ]
+    }
+  };
+
+  var TIERS = [
+    { id:'aware', name:'觉察层', desc:'现在发生了什么', topics:['awareness','basics'] },
+    { id:'response', name:'应对层', desc:'我怎么回应这个', topics:['regulate','impulse','kindness'] },
+    { id:'action', name:'行动层', desc:'具体怎么往前走', topics:['challenge','procrastination','order'] },
+    { id:'recovery', name:'恢复层', desc:'怎么真正休息', topics:['relax'] }
+  ];
+
+  /* ============================= 状态 ============================= */
+
+  var state = { view:'loading', themeId:null, step:0, session:null, allEntries:[], returnTo:null, toolboxTab:'breathe' };
+  var answers = {};
+  var breatheTimer = null;
+
+  var app = document.getElementById('app');
+
+  function todayStr(d){ d = d || new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  function initAnswers(topicId){
+    if(answers[topicId]) return;
+    var t = TOPICS[topicId];
+    if(t.isBranching){ answers[topicId] = {}; return; }
+    answers[topicId] = t.blocks.map(function(b){ return b.fields.map(function(){ return null; }); });
+  }
+
+  function getBlocks(topicId){
+    var t = TOPICS[topicId];
+    if(topicId === 'challenge' && t.hasFollowup && state._challengeFollowupBlock){
+      return [state._challengeFollowupBlock].concat(t.blocks);
+    }
+    return t.blocks;
+  }
+
+  /* ============================= Supabase ============================= */
+
+  function saveEntry(themeId, payload, cb){
+    if(!supabase || !state.session){ cb(false); return; }
+    supabase.from('entries').upsert({
+      user_id: state.session.user.id, entry_date: todayStr(), theme_id: themeId, answers: payload
+    }, { onConflict:'user_id,entry_date,theme_id' }).then(function(res){ cb(!res.error); });
+  }
+
+  function loadAllEntries(cb){
+    if(!supabase || !state.session){ cb(); return; }
+    supabase.from('entries').select('entry_date, theme_id, answers')
+      .eq('user_id', state.session.user.id).order('entry_date', { ascending:false }).limit(2000)
+      .then(function(res){ state.allEntries = (res.data || []); cb(); });
+  }
+
+  function doneTodaySet(){
+    var t = todayStr(); var set = {};
+    state.allEntries.forEach(function(e){ if(e.entry_date === t) set[e.theme_id] = true; });
+    return set;
+  }
+  function computeStreak(){
+    var dateSet = {}; state.allEntries.forEach(function(e){ dateSet[e.entry_date] = true; });
+    var streak = 0; var cursor = new Date();
+    while(true){ var s = todayStr(cursor); if(dateSet[s]){ streak++; cursor.setDate(cursor.getDate()-1); } else break; }
+    return streak;
+  }
+  function findLastAction(topicId, fieldTrackable){
+    var rows = state.allEntries.filter(function(e){ return e.theme_id === topicId; });
+    if(!rows.length) return null;
+    var last = rows[0];
+    if(!last.answers || !last.answers.length) return null;
+    var lastBlock = last.answers[last.answers.length-1];
+    if(!lastBlock || !lastBlock.length) return null;
+    var val = lastBlock[lastBlock.length-1];
+    return (typeof val === 'string' && val.trim()) ? val : null;
+  }
+
+  /* ============================= 通用小组件 ============================= */
+
+  function chipRow(options, value, multi, onPick){
+    var wrap = document.createElement('div'); wrap.className='chips';
+    options.forEach(function(label){
+      var selected = multi ? (Array.isArray(value) && value.indexOf(label)>-1) : (value===label);
+      var c = document.createElement('div'); c.className='chip'+(selected?' selected':'');
+      c.textContent = label;
+      c.onclick = function(){ onPick(label); };
+      wrap.appendChild(c);
+    });
+    return wrap;
+  }
+
+  function scaleRow(value, max, onPick){
+    var wrap = document.createElement('div'); wrap.className='scale-row';
+    for(var i=1;i<=(max||10);i++){
+      (function(n){
+        var d = document.createElement('div'); d.className='scale-num'+(value===n?' selected':'');
+        d.textContent = n; d.onclick = function(){ onPick(n); };
+        wrap.appendChild(d);
+      })(i);
+    }
+    return wrap;
+  }
+
+  function renderField(container, field, value, onChange){
+    var label = document.createElement('label'); label.className='q'; label.textContent = field.q || '';
+    if(field.q) container.appendChild(label);
+
+    if(field.type === 'text'){
+      var ta = document.createElement('textarea');
+      ta.placeholder = field.ph || '写不出来也没关系，空着往下走';
+      ta.value = value || '';
+      ta.oninput = function(e){ onChange(e.target.value); };
+      container.appendChild(ta);
+    } else if(field.type === 'chips'){
+      container.appendChild(chipRow(field.options, value, field.multi, function(label){
+        if(field.multi){
+          var arr = Array.isArray(value) ? value.slice() : [];
+          var i = arr.indexOf(label);
+          if(i>-1) arr.splice(i,1); else arr.push(label);
+          onChange(arr);
+        } else { onChange(label); }
+      }));
+    } else if(field.type === 'scale'){
+      container.appendChild(scaleRow(value, field.max, function(n){ onChange(n); }));
+    } else if(field.type === 'countedText'){
+      var ta2 = document.createElement('textarea');
+      ta2.style.minHeight = '90px';
+      ta2.placeholder = field.ph || '';
+      ta2.value = (value && value.text) || '';
+      var hint = document.createElement('div'); hint.className='count-hint';
+      function updateHint(txt){
+        var lines = txt.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+        hint.textContent = '已写下 ' + lines.length + ' 条';
+        return lines.length;
+      }
+      updateHint(ta2.value);
+      ta2.oninput = function(e){ var c = updateHint(e.target.value); onChange({ text:e.target.value, count:c }); };
+      container.appendChild(ta2); container.appendChild(hint);
+    } else if(field.type === 'toolLink'){
+      var btn = document.createElement('button'); btn.className='btn btn-gold';
+      btn.style.marginBottom='16px'; btn.textContent = '🆘 打开现场平静工具';
+      btn.onclick = function(){ openToolbox({ view:'topic', themeId: state.themeId, step: state.step }); };
+      container.appendChild(btn);
+    }
+  }
+
+  /* ============================= 视图：登录/加载 ============================= */
+
+  function renderLoading(){ app.innerHTML=''; var n=document.createElement('div'); n.className='center-note'; n.textContent='加载中……'; app.appendChild(n); }
+
+  function renderConfigMissing(){
+    app.innerHTML='';
+    var card=document.createElement('div'); card.className='card';
+    var title=document.createElement('h1'); title.className='title'; title.textContent='还差一步：连接数据库';
+    var note=document.createElement('div'); note.className='practice-note';
+    note.innerHTML='在代码顶部把 <b>SUPABASE_URL</b> 和 <b>SUPABASE_ANON_KEY</b> 换成你自己 Supabase 项目的信息，保存后刷新页面即可。';
+    card.appendChild(title); card.appendChild(note); app.appendChild(card);
+  }
+
+  function renderLogin(){
+    app.innerHTML='';
+    var eyebrow=document.createElement('div'); eyebrow.className='eyebrow'; eyebrow.textContent='自我觉察和正念';
+    var title=document.createElement('div'); title.className='home-title'; title.textContent='登录继续';
+    var sub=document.createElement('div'); sub.className='home-sub'; sub.textContent='用邮箱收一个登录链接，不用记密码';
+    app.appendChild(eyebrow); app.appendChild(title); app.appendChild(sub);
+
+    var card=document.createElement('div'); card.className='card';
+    var label=document.createElement('label'); label.className='q'; label.textContent='邮箱地址';
+    var input=document.createElement('input'); input.type='email'; input.placeholder='you@example.com';
+    var msg=document.createElement('div'); msg.className='center-note'; msg.style.display='none';
+    var btn=document.createElement('button'); btn.className='btn btn-primary'; btn.style.width='100%'; btn.textContent='发送登录链接';
+    btn.onclick=function(){
+      var email=input.value.trim(); if(!email) return;
+      btn.disabled=true; btn.textContent='发送中……';
+      supabase.auth.signInWithOtp({ email:email, options:{ emailRedirectTo: window.location.href } }).then(function(res){
+        msg.style.display='block';
+        msg.textContent = res.error ? ('发送失败：'+res.error.message) : '邮件已发送，去邮箱点一下链接，回来这个页面就会自动登录。';
+        btn.disabled=false; btn.textContent='重新发送';
+      });
+    };
+    card.appendChild(label); card.appendChild(input); card.appendChild(btn); card.appendChild(msg);
+    app.appendChild(card);
+  }
+
+  /* ============================= 首页 ============================= */
+
+  function renderHome(){
+    app.innerHTML='';
+    var header=document.createElement('div'); header.className='header-row';
+    var eyebrow=document.createElement('div'); eyebrow.className='eyebrow'; eyebrow.style.marginBottom='0'; eyebrow.textContent='自我觉察和正念';
+    var histBtn=document.createElement('button'); histBtn.className='icon-btn'; histBtn.textContent='📊 历史';
+    histBtn.onclick=function(){ state.view='history'; render(); };
+    header.appendChild(eyebrow); header.appendChild(histBtn);
+    app.appendChild(header);
+
+    var title=document.createElement('div'); title.className='home-title'; title.textContent='今天想练哪一个？';
+    app.appendChild(title);
+
+    var done = doneTodaySet();
+    TIERS.forEach(function(tier){
+      var tb=document.createElement('div'); tb.className='tier-block';
+      var head=document.createElement('div'); head.className='tier-head';
+      var name=document.createElement('div'); name.className='tier-name'; name.textContent=tier.name;
+      var desc=document.createElement('div'); desc.className='tier-desc'; desc.textContent='· '+tier.desc;
+      head.appendChild(name); head.appendChild(desc); tb.appendChild(head);
+
+      var grid=document.createElement('div'); grid.className='topic-grid';
+      tier.topics.forEach(function(tid){
+        var t = TOPICS[tid];
+        var card=document.createElement('div'); card.className='topic-card';
+        card.onclick=function(){ enterTopic(tid); };
+        var emoji=document.createElement('div'); emoji.className='topic-emoji'; emoji.textContent=t.emoji;
+        var body=document.createElement('div'); body.className='topic-body';
+        var nm=document.createElement('div'); nm.className='topic-name'; nm.textContent=t.name;
+        var bl=document.createElement('div'); bl.className='topic-blurb'; bl.textContent=t.blurb;
+        body.appendChild(nm); body.appendChild(bl);
+        card.appendChild(emoji); card.appendChild(body);
+        if(done[tid]){ var chk=document.createElement('div'); chk.className='topic-check'; chk.textContent='✓ 今天做过'; card.appendChild(chk); }
+        grid.appendChild(card);
+      });
+      tb.appendChild(grid);
+      app.appendChild(tb);
+    });
+
+    var logout=document.createElement('button'); logout.className='btn btn-ghost';
+    logout.style.marginTop='22px'; logout.style.width='100%'; logout.textContent='退出登录';
+    logout.onclick=function(){ supabase.auth.signOut().then(function(){ state.view='login'; render(); }); };
+    app.appendChild(logout);
+
+    renderFab();
+  }
+
+  function enterTopic(tid){
+    initAnswers(tid);
+    var t = TOPICS[tid];
+    if(t.hasFollowup){
+      var lastAction = findLastAction(tid);
+      state._challengeFollowupBlock = lastAction ? {
+        title:'上次的回顾', note:'先回顾一下，再继续新的记录', isFollowup:true, lastAction:lastAction,
+        fields:[{type:'chips', q:'上次你说要做的："'+lastAction+'"——完成了吗？', options:['完成了','没有','情况变了']}]
+      } : null;
+    }
+    state.view='topicIntro'; state.themeId=tid; state.step=0; render();
+  }
+
+  function renderDots(total, current){
+    var wrap=document.createElement('div'); wrap.className='dots';
+    for(var i=0;i<total;i++){ var d=document.createElement('div'); d.className='dot'+(i<current?' done':'')+(i===current?' current':''); wrap.appendChild(d); }
+    return wrap;
+  }
+
+  function renderFab(){
+    var fab=document.createElement('button'); fab.className='fab'; fab.textContent='🆘 现场平静';
+    fab.onclick=function(){ openToolbox({ view: state.view, themeId: state.themeId, step: state.step }); };
+    app.appendChild(fab);
+  }
+
+  /* ============================= 主题：intro ============================= */
+
+  function renderTopicIntro(){
+    app.innerHTML='';
+    var t = TOPICS[state.themeId];
+    var backline=document.createElement('div'); backline.className='backline';
+    var back=document.createElement('button'); back.className='backbtn'; back.textContent='← 首页';
+    back.onclick=function(){ state.view='home'; render(); };
+    backline.appendChild(back); app.appendChild(backline);
+
+    var card=document.createElement('div'); card.className='card';
+    var tag=document.createElement('div'); tag.className='theme-tag'; tag.textContent=t.emoji+' '+t.name;
+    var title=document.createElement('h1'); title.className='title'; title.textContent='这在解决什么';
+    var note=document.createElement('div'); note.className='purpose-note'; note.textContent=t.purpose;
+    card.appendChild(tag); card.appendChild(title); card.appendChild(note);
+    var spacer=document.createElement('div'); spacer.className='spacer'; card.appendChild(spacer);
+    var startBtn=document.createElement('button'); startBtn.className='btn btn-primary'; startBtn.style.width='100%'; startBtn.textContent='开始';
+    startBtn.onclick=function(){
+      state.view = t.isBranching ? 'procrastination' : 'topic';
+      state.step=0; render();
+    };
+    card.appendChild(startBtn);
+    app.appendChild(card);
+    renderFab();
+  }
+
+  /* ============================= 主题：普通 block 流程 ============================= */
+
+  function renderTopicFlow(){
+    app.innerHTML='';
+    var t = TOPICS[state.themeId];
+    var blocks = getBlocks(state.themeId);
+
+    var backline=document.createElement('div'); backline.className='backline';
+    var back=document.createElement('button'); back.className='backbtn'; back.textContent='← 首页';
+    back.onclick=function(){ state.view='home'; render(); };
+    backline.appendChild(back); app.appendChild(backline);
+
+    var isDone = state.step >= blocks.length;
+    app.appendChild(renderDots(blocks.length, Math.min(state.step, blocks.length-1)));
+
+    var card=document.createElement('div'); card.className='card';
+
+    if(isDone){
+      var emoji=document.createElement('div'); emoji.className='done-emoji'; emoji.textContent='✓';
+      var aff=document.createElement('div'); aff.className='affirm'; aff.textContent=t.name+'今天写完了。';
+      card.appendChild(emoji); card.appendChild(aff);
+      var savedNote=document.createElement('div'); savedNote.className='center-note'; savedNote.textContent='正在保存……';
+      card.appendChild(savedNote);
+
+      var payload = answers[t.id];
+      if(t.hasFollowup && state._challengeFollowupBlock){
+        payload = [[answers._followupChallenge || null]].concat(answers[t.id]);
+      }
+      saveEntry(t.id, payload, function(ok){
+        savedNote.textContent = ok ? '已保存到你的账号。' : '保存失败，检查网络后可以重新进入这个主题再试。';
+        loadAllEntries(function(){});
+      });
+
+      var spacer0=document.createElement('div'); spacer0.className='spacer'; card.appendChild(spacer0);
+      var homeBtn=document.createElement('button'); homeBtn.className='btn btn-primary'; homeBtn.style.width='100%'; homeBtn.textContent='回首页';
+      homeBtn.onclick=function(){ state.view='home'; render(); };
+      card.appendChild(homeBtn);
+      app.appendChild(card); renderFab();
+      return;
+    }
+
+    var block = blocks[state.step];
+    var tag=document.createElement('div'); tag.className='theme-tag'; tag.textContent=t.name+' · '+(state.step+1)+'/'+blocks.length;
+    var title=document.createElement('h1'); title.className='title'; title.textContent=block.title;
+    card.appendChild(tag); card.appendChild(title);
+    if(block.note){ var note=document.createElement('div'); note.className='practice-note'; note.innerHTML='<b>这在练习：</b>'+block.note; card.appendChild(note); }
+
+    block.fields.forEach(function(field, fi){
+      var fw=document.createElement('div'); fw.className='field-wrap';
+      var isFollowup = block.isFollowup;
+      var currentValue = isFollowup ? answers._followupChallenge : (answers[t.id][state.step] ? answers[t.id][state.step][fi] : null);
+      renderField(fw, field, currentValue, function(val){
+        if(isFollowup) answers._followupChallenge = val; else answers[t.id][state.step][fi] = val;
+      });
+      card.appendChild(fw);
+    });
+
+    var spacer=document.createElement('div'); spacer.className='spacer'; card.appendChild(spacer);
+    var nav=document.createElement('div'); nav.className='nav';
+    var prevBtn=document.createElement('button'); prevBtn.className='btn btn-ghost'; prevBtn.textContent='上一步';
+    prevBtn.onclick=function(){ if(state.step>0){ state.step--; render(); } else { state.view='home'; render(); } };
+    var nextBtn=document.createElement('button'); nextBtn.className='btn btn-primary';
+    var isLast = state.step === blocks.length-1;
+    nextBtn.textContent = isLast ? '完成' : '下一步';
+    nextBtn.onclick=function(){ state.step++; render(); };
+    nav.appendChild(prevBtn); nav.appendChild(nextBtn);
+    card.appendChild(nav);
+    app.appendChild(card); renderFab();
+  }
+
+  /* ============================= 拖延与启动阻力（分支流程） ============================= */
+
+  function renderProcrastination(){
+    app.innerHTML='';
+    var t = TOPICS.procrastination;
+    var a = answers.procrastination;
+
+    var backline=document.createElement('div'); backline.className='backline';
+    var back=document.createElement('button'); back.className='backbtn'; back.textContent='← 首页';
+    back.onclick=function(){ state.view='home'; render(); };
+    backline.appendChild(back); app.appendChild(backline);
+
+    var totalSteps = a.size ? (a.size==='小事(<15分钟能做完)' ? 3 : 4) : 2;
+    app.appendChild(renderDots(totalSteps, Math.min(state.step, totalSteps-1)));
+
+    var card=document.createElement('div'); card.className='card';
+
+    if(state.step === 0){
+      var tag=document.createElement('div'); tag.className='theme-tag'; tag.textContent=t.name+' · 1/'+totalSteps;
+      var title=document.createElement('h1'); title.className='title'; title.textContent='这件事有多大？';
+      card.appendChild(tag); card.appendChild(title);
+      var fw=document.createElement('div'); fw.className='field-wrap';
+      renderField(fw, {type:'chips', q:'专注做的话，大概需要多久？', options:['小事(<15分钟能做完)','大事/项目(要分好几次)']}, a.size, function(v){ a.size=v; render(); });
+      card.appendChild(fw);
+      var spacer=document.createElement('div'); spacer.className='spacer'; card.appendChild(spacer);
+      var nav=document.createElement('div'); nav.className='nav';
+      var backBtn=document.createElement('button'); backBtn.className='btn btn-ghost'; backBtn.textContent='上一步';
+      backBtn.onclick=function(){ state.view='home'; render(); };
+      var nextBtn=document.createElement('button'); nextBtn.className='btn btn-primary'; nextBtn.textContent='下一步'; nextBtn.disabled=!a.size;
+      nextBtn.onclick=function(){ state.step=1; render(); };
+      nav.appendChild(backBtn); nav.appendChild(nextBtn); card.appendChild(nav);
+    } else if(state.step === 1){
+      var isSmall = a.size === '小事(<15分钟能做完)';
+      var tag2=document.createElement('div'); tag2.className='theme-tag'; tag2.textContent=t.name+' · 2/'+totalSteps;
+      var title2=document.createElement('h1'); title2.className='title'; title2.textContent = isSmall ? '5分钟启动法' : '拆解这件大事';
+      card.appendChild(tag2); card.appendChild(title2);
+      if(isSmall){
+        var fw2=document.createElement('div'); fw2.className='field-wrap';
+        renderField(fw2, {type:'text', q:'不用做完，只做5分钟，第一个动作是什么？', ph:''}, a.smallStart, function(v){ a.smallStart=v; });
+        card.appendChild(fw2);
+      } else {
+        var fw3=document.createElement('div'); fw3.className='field-wrap';
+        renderField(fw3, {type:'text', q:'这件事"下一个具体动作"是什么？(不是"完成报告"，是"打开文档写第一句话"这种颗粒度)', ph:''}, a.nextAction, function(v){ a.nextAction=v; });
+        var fw4=document.createElement('div'); fw4.className='field-wrap';
+        renderField(fw4, {type:'text', q:'能拆出的3个里程碑是什么？', ph:''}, a.milestones, function(v){ a.milestones=v; });
+        card.appendChild(fw3); card.appendChild(fw4);
+      }
+      var spacer2=document.createElement('div'); spacer2.className='spacer'; card.appendChild(spacer2);
+      var nav2=document.createElement('div'); nav2.className='nav';
+      var backBtn2=document.createElement('button'); backBtn2.className='btn btn-ghost'; backBtn2.textContent='上一步';
+      backBtn2.onclick=function(){ state.step=0; render(); };
+      var nextBtn2=document.createElement('button'); nextBtn2.className='btn btn-primary'; nextBtn2.textContent='下一步';
+      nextBtn2.onclick=function(){ state.step = isSmall ? 2 : 2; render(); };
+      nav2.appendChild(backBtn2); nav2.appendChild(nextBtn2); card.appendChild(nav2);
+    } else if(state.step === 2){
+      var tag3=document.createElement('div'); tag3.className='theme-tag'; tag3.textContent=t.name+' · '+(a.size==='小事(<15分钟能做完)'?'3/3':'3/4');
+      var title3=document.createElement('h1'); title3.className='title'; title3.textContent='阻力来源';
+      card.appendChild(tag3); card.appendChild(title3);
+      var fw5=document.createElement('div'); fw5.className='field-wrap';
+      renderField(fw5, {type:'chips', q:'不开始的阻力更接近哪一种？', options:['还没想清楚具体要做什么','怕做得不够好','现在精力/状态不够','这件事让我有情绪上的抵触']}, a.resistance, function(v){ a.resistance=v; render(); });
+      card.appendChild(fw5);
+      var spacer3=document.createElement('div'); spacer3.className='spacer'; card.appendChild(spacer3);
+      var nav3=document.createElement('div'); nav3.className='nav';
+      var backBtn3=document.createElement('button'); backBtn3.className='btn btn-ghost'; backBtn3.textContent='上一步';
+      backBtn3.onclick=function(){ state.step=1; render(); };
+      var isSmall3 = a.size === '小事(<15分钟能做完)';
+      var nextBtn3=document.createElement('button'); nextBtn3.className='btn btn-primary';
+      nextBtn3.textContent = isSmall3 ? '完成' : '下一步';
+      nextBtn3.onclick=function(){ state.step = isSmall3 ? 99 : 3; render(); };
+      nav3.appendChild(backBtn3); nav3.appendChild(nextBtn3); card.appendChild(nav3);
+    } else if(state.step === 3){
+      // only reached for big tasks: final confirmation before done
+      state.step = 99; render(); return;
+    } else {
+      var emoji=document.createElement('div'); emoji.className='done-emoji'; emoji.textContent='✓';
+      var aff=document.createElement('div'); aff.className='affirm'; aff.textContent='拆解完了，比一开始清楚多了。';
+      card.appendChild(emoji); card.appendChild(aff);
+      var savedNote=document.createElement('div'); savedNote.className='center-note'; savedNote.textContent='正在保存……';
+      card.appendChild(savedNote);
+      saveEntry('procrastination', a, function(ok){
+        savedNote.textContent = ok ? '已保存到你的账号。' : '保存失败，可以重新进入再试。';
+        loadAllEntries(function(){});
+      });
+      var spacer4=document.createElement('div'); spacer4.className='spacer'; card.appendChild(spacer4);
+      var homeBtn=document.createElement('button'); homeBtn.className='btn btn-primary'; homeBtn.style.width='100%'; homeBtn.textContent='回首页';
+      homeBtn.onclick=function(){ answers.procrastination={}; state.view='home'; render(); };
+      card.appendChild(homeBtn);
+    }
+    app.appendChild(card); renderFab();
+  }
+
+  /* ============================= 现场平静 工具箱 ============================= */
+
+  function openToolbox(returnTo){
+    stopBreathing();
+    state.returnTo = returnTo; state.view='toolbox'; state.toolboxTab='breathe'; render();
+  }
+  function closeToolbox(){
+    stopBreathing();
+    var r = state.returnTo || { view:'home' };
+    state.view = r.view; state.themeId = r.themeId; state.step = r.step || 0;
+    render();
+  }
+  function stopBreathing(){ if(breatheTimer){ clearInterval(breatheTimer); breatheTimer=null; } }
+
+  function renderToolbox(){
+    app.innerHTML='';
+    var backline=document.createElement('div'); backline.className='backline';
+    var back=document.createElement('button'); back.className='backbtn'; back.textContent='← 返回';
+    back.onclick=closeToolbox;
+    backline.appendChild(back); app.appendChild(backline);
+
+    var title=document.createElement('div'); title.className='home-title'; title.style.fontSize='22px'; title.textContent='现场平静';
+    var sub=document.createElement('div'); sub.className='home-sub'; sub.textContent='当下就能用的工具，不用写字';
+    app.appendChild(title); app.appendChild(sub);
+
+    var tabs=document.createElement('div'); tabs.className='toolbox-tabs';
+    [['breathe','呼吸'],['ground','5-4-3-2-1'],['scan','60秒扫描']].forEach(function(pair){
+      var tb=document.createElement('div'); tb.className='toolbox-tab'+(state.toolboxTab===pair[0]?' active':'');
+      tb.textContent=pair[1];
+      tb.onclick=function(){ stopBreathing(); state.toolboxTab=pair[0]; render(); };
+      tabs.appendChild(tb);
+    });
+    app.appendChild(tabs);
+
+    var card=document.createElement('div'); card.className='card';
+    if(state.toolboxTab==='breathe') renderBreatheTab(card);
+    else if(state.toolboxTab==='ground') renderGroundTab(card);
+    else renderScanTab(card);
+    app.appendChild(card);
+  }
+
+  function renderBreatheTab(card){
+    var title=document.createElement('h1'); title.className='title'; title.textContent='跟着圆圈呼吸';
+    card.appendChild(title);
+    var wrap=document.createElement('div'); wrap.className='breathe-wrap';
+    var circle=document.createElement('div'); circle.className='breathe-circle'; circle.id='breatheCircle';
+    var label=document.createElement('div'); label.className='breathe-label'; label.id='breatheLabel'; label.textContent='点击开始';
+    wrap.appendChild(circle); wrap.appendChild(label); card.appendChild(wrap);
+
+    var startBtn=document.createElement('button'); startBtn.className='btn btn-primary'; startBtn.style.width='100%'; startBtn.style.marginTop='16px';
+    startBtn.textContent='开始';
+    startBtn.onclick=function(){ startBreathing(); startBtn.style.display='none'; };
+    card.appendChild(startBtn);
+  }
+
+  function startBreathing(){
+    var circle=document.getElementById('breatheCircle'); var label=document.getElementById('breatheLabel');
+    if(!circle) return;
+    var phases=[{text:'吸气……',grow:true},{text:'屏住……',grow:true},{text:'呼气……',grow:false},{text:'停顿……',grow:false}];
+    var p=0;
+    function step(){ var ph=phases[p%phases.length]; label.textContent=ph.text; if(ph.grow) circle.classList.add('grow'); else circle.classList.remove('grow'); p++; }
+    step(); breatheTimer=setInterval(step,4000);
+  }
+
+  function renderGroundTab(card){
+    var title=document.createElement('h1'); title.className='title'; title.textContent='说出来，慢慢过一遍';
+    card.appendChild(title);
+    var items=[[5,'个你现在看到的东西'],[4,'个你现在能摸到的东西'],[3,'个你现在能听到的声音'],[2,'个你现在能闻到的气味'],[1,'个你现在能尝到的味道']];
+    items.forEach(function(it){
+      var row=document.createElement('div'); row.className='ground-item';
+      var num=document.createElement('div'); num.className='ground-num'; num.textContent=it[0];
+      var txt=document.createElement('div'); txt.textContent=it[1]; txt.style.fontSize='13.5px';
+      row.appendChild(num); row.appendChild(txt); card.appendChild(row);
+    });
+    var note=document.createElement('div'); note.className='center-note'; note.textContent='不用写下来，心里说出来就好，慢慢做完这五步。';
+    card.appendChild(note);
+  }
+
+  function renderScanTab(card){
+    var title=document.createElement('h1'); title.className='title'; title.textContent='60秒身心扫描';
+    card.appendChild(title);
+    var note=document.createElement('div'); note.className='practice-note';
+    note.textContent='从头到脚过一遍：此刻哪里最紧？给自己一句简单指令，比如"放下肩膀""松开下巴""脚踩实地面"。不用完美，扫一遍就好。';
+    card.appendChild(note);
+    var affirm=document.createElement('div'); affirm.className='affirm'; affirm.style.marginTop='20px'; affirm.textContent='慢慢来，60秒就够。';
+    card.appendChild(affirm);
+  }
+
+  /* ============================= 历史/统计 ============================= */
+
+  function renderHistory(){
+    app.innerHTML='';
+    var backline=document.createElement('div'); backline.className='backline';
+    var back=document.createElement('button'); back.className='backbtn'; back.textContent='← 首页';
+    back.onclick=function(){ state.view='home'; render(); };
+    backline.appendChild(back); app.appendChild(backline);
+
+    var title=document.createElement('div'); title.className='home-title'; title.textContent='你的记录';
+    app.appendChild(title);
+
+    var streak=computeStreak();
+    var streakWrap=document.createElement('div'); streakWrap.className='streak-big';
+    var num=document.createElement('div'); num.className='streak-num'; num.textContent=streak;
+    var lbl=document.createElement('div'); lbl.className='streak-label'; lbl.textContent='连续记录天数';
+    streakWrap.appendChild(num); streakWrap.appendChild(lbl); app.appendChild(streakWrap);
+
+    var dateSet={}; state.allEntries.forEach(function(e){ dateSet[e.entry_date]=true; });
+    var calNote=document.createElement('div'); calNote.className='center-note'; calNote.style.marginTop='0'; calNote.textContent='最近28天';
+    app.appendChild(calNote);
+    var grid=document.createElement('div'); grid.className='cal-grid';
+    var days=[]; var cursor=new Date(); cursor.setDate(cursor.getDate()-27);
+    for(var i=0;i<28;i++){ days.push(todayStr(cursor)); cursor.setDate(cursor.getDate()+1); }
+    days.forEach(function(d){ var cell=document.createElement('div'); cell.className='cal-cell'+(dateSet[d]?' filled':''); cell.title=d; grid.appendChild(cell); });
+    app.appendChild(grid);
+
+    var counts={}; state.allEntries.forEach(function(e){ counts[e.theme_id]=(counts[e.theme_id]||0)+1; });
+    var statCard=document.createElement('div'); statCard.className='card';
+    var statTitle=document.createElement('h1'); statTitle.className='title'; statTitle.style.fontSize='16px'; statTitle.textContent='各主题写过的次数';
+    statCard.appendChild(statTitle);
+    Object.keys(TOPICS).forEach(function(tid){
+      var t=TOPICS[tid];
+      var row=document.createElement('div'); row.className='theme-stat-row';
+      var name=document.createElement('div'); name.textContent=t.emoji+' '+t.name;
+      var count=document.createElement('div'); count.className='theme-stat-count'; count.textContent=(counts[tid]||0)+' 次';
+      row.appendChild(name); row.appendChild(count); statCard.appendChild(row);
+    });
+    app.appendChild(statCard);
+    renderFab();
+  }
+
+  /* ============================= 渲染分发 ============================= */
+
+  function render(){
+    if(!supabase){ renderConfigMissing(); return; }
+    if(state.view==='loading') renderLoading();
+    else if(state.view==='login') renderLogin();
+    else if(state.view==='home') renderHome();
+    else if(state.view==='topicIntro') renderTopicIntro();
+    else if(state.view==='topic') renderTopicFlow();
+    else if(state.view==='procrastination'){ initAnswers('procrastination'); renderProcrastination(); }
+    else if(state.view==='toolbox') renderToolbox();
+    else if(state.view==='history') renderHistory();
+  }
+
+  function boot(){
+    if(!supabase){ render(); return; }
+    supabase.auth.getSession().then(function(res){
+      state.session = res.data.session;
+      if(state.session){ loadAllEntries(function(){ state.view='home'; render(); }); }
+      else { state.view='login'; render(); }
+    });
+    supabase.auth.onAuthStateChange(function(event, session){
+      state.session = session;
+      if(session && (state.view==='login' || state.view==='loading')){ loadAllEntries(function(){ state.view='home'; render(); }); }
+      if(!session){ state.view='login'; render(); }
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
